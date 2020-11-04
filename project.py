@@ -1,15 +1,97 @@
-from project_io import read_file, connect_to_api
-from project_data_visualisation import time_series
+from project_io import connect_to_api
+from project_calendar import get_valid_dates, find_nearest_date
+from project_data_visualisation import time_series, plot_multiple_time_series
 from project_descriptive_stats import compute_descriptive_stats, make_stats_frame, add_to_frame
+import numpy as np
 
-#print(connect_to_api(input("Enter the service name: >"), "IBM", "demo"))
-data, date_column_name, reverse_data = connect_to_api(input("Enter the service name: >"), "IBM", "NO7SX7BKV0TRLHAM")
-stats = compute_descriptive_stats(data["open"])
-stats_frame = make_stats_frame(stats, "IBM")
+#Function to repeatedly ask for a yes-or-no answer.
+def ask_yes_or_no(question):
+    answer = input(question).lower()
+    valid_answers = ["y", "n"]
+    while True:
+        try:
+            if answer in valid_answers:
+                return answer
+                break
+            else:
+                raise ValueError
+        except ValueError:
+            print("Please enter only \'y\' or \'n\'.")
+            answer = input(question).lower()
 
-data, date_column_name, reverse_data = connect_to_api(input("Enter the service name: >"), "V", "NO7SX7BKV0TRLHAM")
-stats = compute_descriptive_stats(data["open"])
-add_to_frame(stats, "V", stats_frame)
-print(stats_frame)
+#Function to select which analysis user wishes to carry out.
+def print_menu():
+    answer = input("Select one of the following options:\n1. Analysis of Single Company.\n2. Analysis of Multiple Companies.\n")
+    valid_answers = ["1", "2"]
+    while True:
+        try:
+            if answer in valid_answers:
+                return answer
+                break
+            else:
+                raise ValueError
+        except ValueError:
+            print("Please enter only \'1\' or \'2\'.")
+            answer = input("Select one of the following options:\n1. Analysis of Single Company.\n2. Analysis of Multiple Companies.\n")
 
-time_series(data, date_column_name, reverse_data)
+#Function to covert list of tickers seperated for a space into list of
+#capitalised tickers.
+def parse_tickers(ticker_list_in):
+    tickers = ticker_list_in.split(" ")
+    return [ticker.upper() for ticker in tickers]
+
+#Function to add company descriptive statistics to a DataFrame.
+def add_companies_to_frame(service_name, start_date, end_date, frame):
+    tickers = parse_tickers(input("Enter the list of tickers, seperated by a space: >"))
+    data_sets = []
+    for ticker in tickers:
+        data = connect_to_api(service_name, ticker, "NO7SX7BKV0TRLHAM", start_date, end_date)[0]
+        data_sets.append(data)
+        stats = compute_descriptive_stats(data["open"])
+        add_to_frame(stats, ticker, frame)
+    return frame, data_sets
+
+#def make_single_frame(service_name, ticker, start_date = None, end_date = None):
+#Function to create a DataFrame for a single company.
+def make_single_frame(service_name, ticker):
+    start_date, end_date = get_valid_dates()
+    data, date_column_name, reverse_data, new_start, new_end = connect_to_api(service_name, ticker, "NO7SX7BKV0TRLHAM", start_date, end_date)
+    stats = compute_descriptive_stats(data["open"])
+    stats_frame = make_stats_frame(stats, ticker)
+    return stats_frame, data, new_start, new_end
+
+#Function to create a DataFrame for multiple companies.
+def make_full_frame(service_name, start_date = None, end_date = None):
+    #Listed of tickers typed by user is parsed.
+    tickers = parse_tickers(input("Enter the list of tickers, seperated by a space: >"))
+    data_sets = []
+    #An initial DataFrame is created using the first company ticker.
+    frame, data, start_date, end_date = make_single_frame(service_name, tickers[0])
+    #For each ticker in the list, the company statistics are computed and added
+    #to the existing DateFrame.
+    for ticker in tickers:
+        data, date_column_name, reverse_data, new_start, new_end = connect_to_api(service_name, ticker, "NO7SX7BKV0TRLHAM", start_date, end_date)
+        data_sets.append(data)
+        stats = compute_descriptive_stats(data["open"])
+        add_to_frame(stats, ticker, frame)
+    #The DataFrame containing the statistics of all companies is returned along
+    #with the data for the period and tickers.
+    return frame, data_sets, tickers
+
+def main():
+    service_name = input("Enter the service name: >")
+    menu_selection = print_menu()
+    if menu_selection == "1":
+        ticker = input("Enter the company ticker: >")
+        frame, start_date, end_date = make_single_frame(service_name, ticker)
+        time_series(data, ticker, date_column_name, True)
+    if menu_selection == "2":
+        frame, data_sets, tickers = make_full_frame(service_name)
+        plot_multiple_time_series(data_sets, tickers, "timestamp")
+
+    print(frame)
+
+    #time_series(data, ticker, date_column_name, True)
+
+if __name__ == '__main__':
+    main()
