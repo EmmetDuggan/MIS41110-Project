@@ -41,12 +41,19 @@ def get_data_for_period(data, date_column_name, start_date, end_date):
 
     return pd.DataFrame(data[start_index:end_index])
 
+def search_for_tickers(company_names):
+    name_ticker_file = read_file("project_companies.csv")
+    tickers, names = name_ticker_file["Symbol"], name_ticker_file["Name"]
+    return [tickers[i] for i in range(len(tickers)) if names[i] in company_names]
+#name_ticker_file[(name_ticker_file.Symbol == {symbol}) | name_ticker_file.Name == {name}]
+#fuzzywuzzy library
+#df[df['Symbol'].str.contains('Zyn')]
+#Implement GUI
+
 
 # https://stackoverflow.com/questions/47379476/how-to-convert-bytes-data-into-a-python-pandas-dataframe
 # AlphaVantage API Key: NO7SX7BKV0TRLHAM
 def connect_to_api(service_name, ticker, api_key, start_date, end_date):
-
-    # start_date, end_date = get_valid_dates()
 
     #API details: values are in format [url, date_column_name, header_line, reverse_data]
     #reverse_data is a boolean variable. If True, the API presents data in reverse chronological
@@ -70,6 +77,7 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date):
                     return get_data_for_period(data, api_dict[service_name][1], new_start, new_end), api_dict[service_name][1], api_dict[service_name][3], new_start, new_end
                     break
             elif service_name == "yahoo":
+                #Yahoo-ticker-downloader
                 return yf.Ticker(ticker).history(start = start_date, end = end_date)
                 break
             #If the API name is not in the dictionary, a NameError is raised.
