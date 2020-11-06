@@ -11,25 +11,15 @@ plt.rcParams['axes.labelsize'] = 'small'
 plt.rcParams['xtick.labelsize'] = 'small'
 plt.rcParams['ytick.labelsize'] = 'small'
 
-def time_series(data, ticker, date_column_name, reverse_data = False):
-    #If data is formatted in reverse chronological order, the order is reversed.
-    if reverse_data == True:
-        data = data.iloc[::-1]
+def plot_arrangement(data_sets):
+    no_cols = len(data_sets)/2
 
-    dates = data[date_column_name]
-    open_prices = data["open"]
+    uneven = False
+    if no_cols % 2 != 0:
+        no_cols += 0.5
+        uneven = True
+    return 2, int(no_cols), uneven
 
-    fig, ax = plt.figure(figsize=(10,6))
-    plt.setp(ax, xlabel = "Date (yyyy-mm-dd)", ylabel = "Stock Price ($)")
-    ax.plot(dates, open_prices)
-
-    #Set maximum number of axis ticks to 10.
-    ax.xaxis.set_major_locator(plt.MaxNLocator(10))
-    ax.yaxis.set_major_locator(plt.MaxNLocator(10))
-
-    return fig
-
-    #plt.show()
 def set_layout(axis):
     axis.xaxis.set_major_locator(plt.MaxNLocator(10))
     axis.yaxis.set_major_locator(plt.MaxNLocator(10))
@@ -37,6 +27,25 @@ def set_layout(axis):
     axis.set_ylabel("Stock Price ($)")
     xlabels = axis.get_xticklabels()
     axis.set_xticklabels(xlabels, rotation = 45)
+
+def make_time_series(axis, data, dates, ticker):
+    open_prices = data["open"]
+    axis.plot(dates, open_prices)
+    axis.set_title(ticker)
+    set_layout(axis)
+
+def plot_single_time_series(data, ticker, date_column_name, reverse_data = False):
+    #If data is formatted in reverse chronological order, the order is reversed.
+    if reverse_data == True:
+        data = data.iloc[::-1]
+
+    dates = data[date_column_name]
+    open_prices = data["open"]
+
+    fig, ax = plt.subplots(1, 1, figsize=(10,6))
+    set_layout(ax)
+    ax.plot(dates, open_prices)
+    plt.show()
 
 def plot_multiple_time_series(data_sets, tickers, date_column_name, reverse_data = False):
     #If data is formatted in reverse chronological order, the order is reversed.
@@ -46,16 +55,23 @@ def plot_multiple_time_series(data_sets, tickers, date_column_name, reverse_data
 
     dates = data_sets[0][date_column_name]
 
-    fig, ax = plt.subplots(2, 2, figsize=(10,6))
+    no_rows, no_cols, uneven = plot_arrangement(data_sets)
+    fig, axs = plt.subplots(no_rows, no_cols, figsize=(10,6))
     #ax.setp(ax, xlabel = "Date (yyyy-mm-dd)", ylabel = "Stock Price ($)")
 
     data_index = 0
-    for i in range(0,2):
-        for j in range(0,2):
-            open_prices = data_sets[data_index]["open"]
-            ax[i,j].plot(dates, open_prices)
-            set_layout(ax[i,j])
-            data_index += 1
+    print(no_rows, no_cols)
+    for i in range(no_rows):
+        for j in range(no_cols):
+            if uneven == True:
+                if data_index < len(data_sets):
+                    make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
+                    data_index += 1
+                else:
+                    fig.delaxes(axs[i,j])
+            else:
+                make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
+                data_index += 1
 
 
 
