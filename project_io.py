@@ -16,9 +16,12 @@ def get_api_data(api_url, data_start):
         return pd.DataFrame(pd.read_csv(data_string, header = data_start))
 
 #Function to return nearest dates for which data is available.
-def check_dates(data, date_column_name, start_date, end_date):
+def check_dates(data, date_column_name, start_date, end_date, gui = False):
     dates = data[date_column_name]
-    start_date, end_date = find_nearest_date(dates, start_date, end_date)
+    if gui == False:
+        start_date, end_date = find_nearest_date(dates, start_date, end_date)
+    else:
+        start_date, end_date = find_nearest_date(dates, start_date, end_date, True)
     return start_date, end_date
 
 #Function to retrieve data for a specified range of dates.
@@ -53,7 +56,7 @@ def search_for_tickers(company_names):
 
 # https://stackoverflow.com/questions/47379476/how-to-convert-bytes-data-into-a-python-pandas-dataframe
 # AlphaVantage API Key: NO7SX7BKV0TRLHAM
-def connect_to_api(service_name, ticker, api_key, start_date, end_date):
+def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = False):
 
     #API details: values are in format [url, date_column_name, header_line, reverse_data]
     #reverse_data is a boolean variable. If True, the API presents data in reverse chronological
@@ -73,8 +76,9 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date):
                     return None, None, None
                     break
                 else:
-                    new_start, new_end = check_dates(data, api_dict[service_name][1], start_date, end_date)
-                    return get_data_for_period(data, api_dict[service_name][1], new_start, new_end), api_dict[service_name][1], api_dict[service_name][3], new_start, new_end
+                    if gui == False:
+                        start_date, end_date = check_dates(data, api_dict[service_name][1], start_date, end_date)
+                    return get_data_for_period(data, api_dict[service_name][1], start_date, end_date), api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
                     break
             elif service_name == "yahoo":
                 #Yahoo-ticker-downloader
