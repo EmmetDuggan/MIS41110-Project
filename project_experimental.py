@@ -5,7 +5,6 @@ from tkinter import Tk, font
 from project_gui import MenuWindow
 
 win = MenuWindow()
-print(win.service_name)
 
 # start_date = input("Enter start date:")
 # end_date = input("Enter end date:")

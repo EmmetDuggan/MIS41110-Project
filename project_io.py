@@ -19,9 +19,9 @@ def get_api_data(api_url, data_start):
 def check_dates(data, date_column_name, start_date, end_date, gui = False):
     dates = data[date_column_name]
     if gui == False:
-        start_date, end_date = find_nearest_date(dates, start_date, end_date)
+        start_date, end_date = find_nearest_date(dates, start_date, end_date)[0:2]
     else:
-        start_date, end_date = find_nearest_date(dates, start_date, end_date, True)
+        start_date, end_date = find_nearest_date(dates, start_date, end_date, True)[0:2]
     return start_date, end_date
 
 #Function to retrieve data for a specified range of dates.
@@ -78,7 +78,9 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
                 else:
                     if gui == False:
                         start_date, end_date = check_dates(data, api_dict[service_name][1], start_date, end_date)
-                    return get_data_for_period(data, api_dict[service_name][1], start_date, end_date), api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
+                        return get_data_for_period(data, api_dict[service_name][1], start_date, end_date), api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
+                    else:
+                        return data, api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
                     break
             elif service_name == "yahoo":
                 #Yahoo-ticker-downloader

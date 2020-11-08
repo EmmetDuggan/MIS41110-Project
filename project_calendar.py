@@ -72,48 +72,41 @@ def ask_for_date_selection(unavailable_date, date_options):
 #https://www.dataquest.io/blog/python-datetime-tutorial/
 #Function to find the nearest dates to those entered for which data exists.
 def find_nearest_date(data_dates, start_date, end_date, gui = False):
-    print("Start Date:",start_date)
     start_date_dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     end_date_dt = datetime.datetime.strptime(end_date, '%Y-%m-%d')
     data_dts = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in data_dates]
 
-    if gui == False:
-        start_date_dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-        end_date_dt = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        data_dts = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in data_dates]
 
+    if start_date_dt in data_dts and end_date_dt in data_dts:
+        return start_date, end_date
 
-        if start_date_dt in data_dts and end_date_dt in data_dts:
-            return start_date, end_date
-
-        elif start_date_dt not in data_dts and end_date_dt in data_dts:
-            dt_differences = [abs(dt - start_date_dt) for dt in data_dts]
-            options = get_date_options(data_dts, dt_differences)
+    elif start_date_dt not in data_dts and end_date_dt in data_dts:
+        dt_differences = [abs(dt - start_date_dt) for dt in data_dts]
+        options = get_date_options(data_dts, dt_differences)
+        if gui == False:
             new_start = ask_for_date_selection(start_date, options)
             return new_start, end_date
+        else:
+            print("Options:", options)
+            return False, end_date, options
 
-        elif start_date_dt in data_dts and end_date_dt not in data_dts:
-            dt_differences = [abs(dt - end_date_dt) for dt in data_dts]
-            options = get_date_options(data_dts, dt_differences)
+    elif start_date_dt in data_dts and end_date_dt not in data_dts:
+        dt_differences = [abs(dt - end_date_dt) for dt in data_dts]
+        options = get_date_options(data_dts, dt_differences)
+        if gui == False:
             new_end = ask_for_date_selection(end_date, options)
             return start_date, new_end
+        else:
+            return start_date, False, options
 
-        elif start_date_dt not in data_dts and end_date_dt not in data_dts:
-            start_dt_differences = [abs(dt - start_date_dt) for dt in data_dts]
-            end_dt_differences = [abs(dt - end_date_dt) for dt in data_dts]
-            start_options = get_date_options(data_dts, start_dt_differences)
-            end_options = get_date_options(data_dts, end_dt_differences)
+    elif start_date_dt not in data_dts and end_date_dt not in data_dts:
+        start_dt_differences = [abs(dt - start_date_dt) for dt in data_dts]
+        end_dt_differences = [abs(dt - end_date_dt) for dt in data_dts]
+        start_options = get_date_options(data_dts, start_dt_differences)
+        end_options = get_date_options(data_dts, end_dt_differences)
+        if gui == False:
             new_start = ask_for_date_selection(start_date, start_options)
             new_end = ask_for_date_selection(end_date, end_options)
             return new_start, new_end
-
-    else:
-        if start_date_dt in data_dts and end_date_dt in data_dts:
-            return start_date, end_date
-        elif start_date_dt in data_dts and end_date_dt not in data_dts:
-            return start_date, False
-        elif start_date_dt not in data_dts and end_date_dt in data_dts:
-            options = get_date_options(data_dts, dt_differences)
-            return False, end_date, options
-        elif start_date_dt not in data_dts and end_date_dt not in data_dts:
-            return False, False
+        else:
+            return False, False, start_options, end_options
