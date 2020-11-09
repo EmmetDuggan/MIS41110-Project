@@ -2,6 +2,7 @@ import pandas as pd
 import seaborn as sb
 import matplotlib.pyplot as plt
 import matplotlib.axes as ax
+import datetime
 
 plt.rc('font', family = 'serif')
 plt.rcParams['figure.figsize'] = (14,5)
@@ -34,13 +35,18 @@ def make_time_series(axis, data, dates, ticker):
     axis.set_title(ticker)
     set_layout(axis)
 
-def plot_single_time_series(data, ticker, date_column_name, reverse_data = False):
+def plot_single_time_series(data, ticker, date_column_name, reverse_data = False, yahoo = False):
     #If data is formatted in reverse chronological order, the order is reversed.
     if reverse_data == True:
         data = data.iloc[::-1]
 
-    dates = data[date_column_name]
-    open_prices = data["open"]
+    #Accounting for different format of Yahoo! data.
+    if yahoo == False:
+        dates = data[date_column_name]
+        open_prices = data["open"]
+    else:
+        dates = [datetime.datetime.strftime(date, '%Y-%m-%d') for date in data.index]
+        open_prices = data["Open"]
 
     fig, ax = plt.subplots(1, 1, figsize=(10,6))
     set_layout(ax)

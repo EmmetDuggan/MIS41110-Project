@@ -64,7 +64,10 @@ def main():
         else:
             ticker = search_for_tickers(input("Enter the full company name: >"))[0]
         frame, data, date_column_name, start_date, end_date = make_single_frame(service_name, ticker)
-        plot_single_time_series(data, ticker, date_column_name, True)
+        if service_name != "yahoo":
+            plot_single_time_series(data, ticker, date_column_name, True)
+        else:
+            plot_single_time_series(data, ticker, date_column_name, True, yahoo = True)
     if menu_selection == "2":
         if ticker_name_choice == "t":
             tickers = input("Enter the company tickers, seperated by a semi-colon (;): >").split("; ")

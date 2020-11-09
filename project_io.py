@@ -46,12 +46,16 @@ def get_data_for_period(data, date_column_name, start_date, end_date):
 
 def search_for_tickers(company_names):
     name_ticker_file = read_file("project_companies.csv")
-    tickers, names = name_ticker_file["Symbol"], name_ticker_file["Name"]
+    tickers, names = name_ticker_file["Symbol"].str.upper(), name_ticker_file["Name"].str.lower()
     return [tickers[i] for i in range(len(tickers)) if names[i] in company_names]
 #name_ticker_file[(name_ticker_file.Symbol == {symbol}) | name_ticker_file.Name == {name}]
 #fuzzywuzzy library
 #df[df['Symbol'].str.contains('Zyn')]
 #Implement GUI
+
+def search_archive(archive_file, tickers, ):
+    archive = read_file(archive_file)
+
 
 
 # https://stackoverflow.com/questions/47379476/how-to-convert-bytes-data-into-a-python-pandas-dataframe
@@ -62,16 +66,17 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
     #reverse_data is a boolean variable. If True, the API presents data in reverse chronological
     #form and must be reversed.
     api_dict = {"alphavantage": ["https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + ticker + "&apikey=" + api_key + "&datatype=csv", "timestamp", 0, True],
-    "financial content": ["http://markets.financialcontent.com/stocks/action/gethistoricaldata?Month=12&Symbol=" + ticker + "&Range=300&Year=2017", 0],
-    "wall street journal": ["http://quotes.wsj.com/" + ticker + "/historical-prices/download?MOD_VIEW=page&num_rows=6299.041666666667&range_days=6299.041666666667&startDate=09/06/2000&endDate=12/05/2017", 0],
+    "nasdaq": ["https://www.nasdaq.com/api/v1/historical/" + ticker + "/stocks/" + start_date + "/" + end_date, "Date", 0, True],
     "macrotrends": ["http://download.macrotrends.net/assets/php/stock_data_export.php?t=" + ticker, "date", 9, False]}
 
     service_name = service_name.lower()
     while True:
         try:
             #Searches for API name in dictionary
+            print("Service: ",service_name)
             if service_name in api_dict:
                 data = get_api_data(api_dict[service_name][0], api_dict[service_name][2])
+                print("Got Data")
                 if '{' in data.keys():
                     return None, None, None
                     break
@@ -84,6 +89,9 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
                     break
             elif service_name == "yahoo":
                 #Yahoo-ticker-downloader
+                #Yahoo! Finance returns data in slightly different format. Column containing
+                #date information is not among actual DataFrame columns. Entry indices contain
+                #information about the data date.
                 return yf.Ticker(ticker).history(start = start_date, end = end_date)
                 break
             #If the API name is not in the dictionary, a NameError is raised.
