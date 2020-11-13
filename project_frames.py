@@ -1,6 +1,7 @@
 from project_io import connect_to_api, search_for_tickers
 from project_calendar import get_valid_dates, find_nearest_date
 from project_descriptive_stats import compute_descriptive_stats, make_stats_frame, dictionary_values_to_series, add_to_frame
+
 import datetime
 
 #Function to create a DataFrame for a single company.
@@ -9,6 +10,7 @@ def make_single_frame(service_name, ticker, start_date = None, end_date = None, 
         start_date, end_date = get_valid_dates()
 
     if service_name != "yahoo":
+
         data, date_column_name, reverse_data, new_start, new_end = connect_to_api(service_name, ticker, "NO7SX7BKV0TRLHAM", start_date, end_date, gui)
         stats = compute_descriptive_stats(data["open"])
         stats_frame = make_stats_frame(stats, ticker)

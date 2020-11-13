@@ -5,6 +5,7 @@ import matplotlib.axes as ax
 import datetime
 from project_io import search_for_names
 
+
 plt.rc('font', family = 'serif')
 plt.rcParams['figure.figsize'] = (14,5)
 plt.rcParams['font.size'] = 8.
@@ -38,7 +39,7 @@ def make_time_series(axis, data, dates, ticker, company_name = ""):
     axis.set_title("{} ({})".format(company_name.title(), ticker))
     set_layout(axis, dates)
 
-def plot_single_time_series(data, ticker, date_column_name, reverse_data = False):
+def plot_single_time_series(data, ticker, date_column_name, reverse_data = False, yahoo = False):
     #If data is formatted in reverse chronological order, the order is reversed.
     if reverse_data == True:
         data = data.iloc[::-1]

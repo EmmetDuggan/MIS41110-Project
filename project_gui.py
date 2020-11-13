@@ -46,6 +46,7 @@ class MenuWindow():
         macrotrends_button = tk.Button(api_panel, text="MacroTrends", command = lambda: self.chosen_service_name("MacroTrends", macrotrends_button, [alphavantage_button, yahoo_button]), bg='ivory', fg='grey8',font=('Calibri',10))
         yahoo_button = tk.Button(api_panel, text="Yahoo! Finance", command = lambda: self.chosen_service_name("Yahoo", yahoo_button, [macrotrends_button, alphavantage_button]), bg='ivory', fg='grey8',font=('Calibri',10))
 
+
         alphavantage_button.grid(row = 0, column = 0, sticky='ewns')
         macrotrends_button.grid(row = 0, column = 1, sticky='ewns')
         yahoo_button.grid(row=0, column=2, sticky='ewns')
@@ -56,7 +57,6 @@ class MenuWindow():
         ticker_button = tk.Button(ticker_question_panel, text="Ticker", command=lambda: self.tickers_selected(self.root, name_button, ticker_button), bg='ivory', fg='grey8',font=('Calibri',10))
         name_button = tk.Button(ticker_question_panel, text="Name", command=lambda: self.names_selected(self.root, name_button, ticker_button), bg='ivory', fg='grey8',font=('Calibri',10))
 
-
         ticker_button.grid(row = 0, column = 0, sticky='ewns')
         name_button.grid(row = 0, column = 1, sticky='ewns')
         ticker_question_panel.place(x=230, y=20, anchor='w')
@@ -64,14 +64,14 @@ class MenuWindow():
     def add_period_panel(self):
         period_panel = ttk.LabelFrame(self.root, text="Time Period", style = "TLabelframe", labelanchor='n')
         date_format_info = ttk.Label(period_panel, text = "Enter dates in the form yyyy-mm-dd.\nNote that the end date is not inclusive.", style="TLabel")
+=======
         start_date_question = ttk.Label(period_panel, text = "Start of period:", style="TLabel")
         global start_date_input
         start_date_input = ttk.Entry(period_panel)
         end_date_question = ttk.Label(period_panel, text = "End of period:", style="TLabel")
         global end_date_input
         end_date_input = ttk.Entry(period_panel)
-
-
+        
         date_format_info.grid(row = 0, column = 0, sticky='ewns', columnspan = 2)
         start_date_question.grid(row = 1, column = 0, sticky='ewns')
         start_date_input.grid(row = 1, column = 1, sticky='ewns')

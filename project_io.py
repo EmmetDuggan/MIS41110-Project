@@ -80,6 +80,7 @@ def search_for_sector(tickers_in):
 
 
     #return [tickers[i] for i in range(len(tickers)) if names[i] in company_names]
+
 #name_ticker_file[(name_ticker_file.Symbol == {symbol}) | name_ticker_file.Name == {name}]
 #fuzzywuzzy library
 #df[df['Symbol'].str.contains('Zyn')]
@@ -117,9 +118,11 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
     while True:
         try:
             #Searches for API name in dictionary
+            print("Service: ",service_name)
             if service_name in api_dict:
                 data = get_api_data(api_dict[service_name][0], api_dict[service_name][2])
                 if "{" not in data.keys():
+
                     if gui == False:
                         start_date, end_date = check_dates(data, api_dict[service_name][1], start_date, end_date)
                         return get_data_for_period(data, api_dict[service_name][1], start_date, end_date), api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
