@@ -87,7 +87,6 @@ def find_nearest_date(data_dates, start_date, end_date, gui = False):
             new_start = ask_for_date_selection(start_date, options)
             return new_start, end_date
         else:
-            print("Options:", options)
             return False, end_date, options
 
     elif start_date_dt in data_dts and end_date_dt not in data_dts:

@@ -2,6 +2,8 @@ import pandas as pd
 import seaborn as sb
 import matplotlib.pyplot as plt
 import matplotlib.axes as ax
+import datetime
+from project_io import search_for_names
 
 plt.rc('font', family = 'serif')
 plt.rcParams['figure.figsize'] = (14,5)
@@ -20,30 +22,38 @@ def plot_arrangement(data_sets):
         uneven = True
     return 2, int(no_cols), uneven
 
-def set_layout(axis):
-    axis.xaxis.set_major_locator(plt.MaxNLocator(10))
-    axis.yaxis.set_major_locator(plt.MaxNLocator(10))
+def set_layout(axis, dates):
+
     axis.set_xlabel("Date (yyyy-mm-dd)")
     axis.set_ylabel("Stock Price ($)")
     xlabels = axis.get_xticklabels()
-    axis.set_xticklabels(xlabels, rotation = 45)
+    axis.set_xticklabels(dates, rotation = 45)
 
-def make_time_series(axis, data, dates, ticker):
+    axis.xaxis.set_major_locator(plt.MaxNLocator(10))
+    axis.yaxis.set_major_locator(plt.MaxNLocator(10))
+
+def make_time_series(axis, data, dates, ticker, company_name = ""):
     open_prices = data["open"]
     axis.plot(dates, open_prices)
-    axis.set_title(ticker)
-    set_layout(axis)
+    axis.set_title("{} ({})".format(company_name.title(), ticker))
+    set_layout(axis, dates)
 
 def plot_single_time_series(data, ticker, date_column_name, reverse_data = False):
     #If data is formatted in reverse chronological order, the order is reversed.
     if reverse_data == True:
         data = data.iloc[::-1]
 
-    dates = data[date_column_name]
-    open_prices = data["open"]
+    #Accounting for different format of Yahoo! data.
+    if date_column_name != "yahoo":
+        dates = data[date_column_name]
+    else:
+        dates = [datetime.datetime.strftime(date, '%Y-%m-%d') for date in data.index]
 
+    company_name = search_for_names(ticker)
+    open_prices = data["open"]
     fig, ax = plt.subplots(1, 1, figsize=(10,6))
-    set_layout(ax)
+    set_layout(ax, dates)
+    ax.set_title("{} ({})".format(company_name.title(), ticker))
     ax.plot(dates, open_prices)
     plt.show()
 
@@ -53,11 +63,19 @@ def plot_multiple_time_series(data_sets, tickers, date_column_name, reverse_data
         for data in data_sets:
             data = data.iloc[::-1]
 
-    dates = data_sets[0][date_column_name]
+    if date_column_name != "yahoo":
+        dates = data_sets[0][date_column_name]
+    else:
+        dates = [datetime.datetime.strftime(date, '%Y-%m-%d') for date in data_sets[0].index]
+
 
     no_rows, no_cols, uneven = plot_arrangement(data_sets)
     fig, axs = plt.subplots(no_rows, no_cols, figsize=(10,6))
-    #ax.setp(ax, xlabel = "Date (yyyy-mm-dd)", ylabel = "Stock Price ($)")
+
+    company_names = search_for_names(tickers)
+    print(len(tickers))
+    print(len(company_names))
+
 
     data_index = 0
     print(no_rows, no_cols)
@@ -65,15 +83,19 @@ def plot_multiple_time_series(data_sets, tickers, date_column_name, reverse_data
         for j in range(no_cols):
             if uneven == True:
                 if data_index < len(data_sets):
-                    make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
+                    if len(company_names) == len(tickers):
+                        make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index], company_names[data_index])
+                    else:
+                        make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
                     data_index += 1
                 else:
                     fig.delaxes(axs[i,j])
             else:
-                make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
+                if len(company_names) == len(tickers):
+                    make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index], company_names[data_index])
+                else:
+                    make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
                 data_index += 1
-
-
 
     plt.show()
 
