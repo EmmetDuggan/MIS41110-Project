@@ -4,6 +4,8 @@ from project_data_visualisation import plot_single_time_series, plot_multiple_ti
 from project_descriptive_stats import compute_descriptive_stats, make_stats_frame, add_to_frame
 from project_frames import make_single_frame, make_full_frame
 import datetime
+import time
+import threading
 import numpy as np
 import tkinter as tk
 from tkinter import ttk
@@ -42,20 +44,22 @@ class MenuWindow():
 
     def add_api_panel(self):
         api_panel = ttk.LabelFrame(self.root, text="Service Name", style = "TLabelframe", labelanchor='n')
-        alphavantage_button = tk.Button(api_panel, text="AlphaVantage", command = lambda: self.chosen_service_name("AlphaVantage", alphavantage_button, [macrotrends_button, yahoo_button]), bg='ivory', fg='grey8',font=('Calibri',10))
-        macrotrends_button = tk.Button(api_panel, text="MacroTrends", command = lambda: self.chosen_service_name("MacroTrends", macrotrends_button, [alphavantage_button, yahoo_button]), bg='ivory', fg='grey8',font=('Calibri',10))
-        yahoo_button = tk.Button(api_panel, text="Yahoo! Finance", command = lambda: self.chosen_service_name("Yahoo", yahoo_button, [macrotrends_button, alphavantage_button]), bg='ivory', fg='grey8',font=('Calibri',10))
-
+        alphavantage_button = tk.Button(api_panel, text="AlphaVantage", command = lambda: self.chosen_service_name("AlphaVantage", alphavantage_button, [macrotrends_button, yahoo_button, nasdaq_button]), bg='ivory', fg='grey8',font=('Calibri',10))
+        macrotrends_button = tk.Button(api_panel, text="MacroTrends", command = lambda: self.chosen_service_name("MacroTrends", macrotrends_button, [alphavantage_button, yahoo_button, nasdaq_button]), bg='ivory', fg='grey8',font=('Calibri',10))
+        yahoo_button = tk.Button(api_panel, text="Yahoo! Finance", command = lambda: self.chosen_service_name("Yahoo", yahoo_button, [macrotrends_button, alphavantage_button, nasdaq_button]), bg='ivory', fg='grey8',font=('Calibri',10))
+        nasdaq_button = tk.Button(api_panel, text="NASDAQ Historical", command = lambda: self.chosen_service_name("Nasdaq", nasdaq_button, [macrotrends_button, alphavantage_button, yahoo_button]), bg='ivory', fg='grey8',font=('Calibri',10))
 
         alphavantage_button.grid(row = 0, column = 0, sticky='ewns')
         macrotrends_button.grid(row = 0, column = 1, sticky='ewns')
-        yahoo_button.grid(row=0, column=2, sticky='ewns')
+        yahoo_button.grid(row=1, column=0, sticky='ewns')
+        nasdaq_button.grid(row=1, column=1, sticky='ewns')
         api_panel.grid(row = 0, column = 0, sticky='ewns')
 
     def add_ticker_panel(self):
         ticker_question_panel = ttk.LabelFrame(self.root, text="Search By", style = "TLabelframe", labelanchor='n')
         ticker_button = tk.Button(ticker_question_panel, text="Ticker", command=lambda: self.tickers_selected(self.root, name_button, ticker_button), bg='ivory', fg='grey8',font=('Calibri',10))
         name_button = tk.Button(ticker_question_panel, text="Name", command=lambda: self.names_selected(self.root, name_button, ticker_button), bg='ivory', fg='grey8',font=('Calibri',10))
+
 
         ticker_button.grid(row = 0, column = 0, sticky='ewns')
         name_button.grid(row = 0, column = 1, sticky='ewns')
@@ -64,14 +68,14 @@ class MenuWindow():
     def add_period_panel(self):
         period_panel = ttk.LabelFrame(self.root, text="Time Period", style = "TLabelframe", labelanchor='n')
         date_format_info = ttk.Label(period_panel, text = "Enter dates in the form yyyy-mm-dd.\nNote that the end date is not inclusive.", style="TLabel")
-=======
         start_date_question = ttk.Label(period_panel, text = "Start of period:", style="TLabel")
         global start_date_input
         start_date_input = ttk.Entry(period_panel)
         end_date_question = ttk.Label(period_panel, text = "End of period:", style="TLabel")
         global end_date_input
         end_date_input = ttk.Entry(period_panel)
-        
+
+
         date_format_info.grid(row = 0, column = 0, sticky='ewns', columnspan = 2)
         start_date_question.grid(row = 1, column = 0, sticky='ewns')
         start_date_input.grid(row = 1, column = 1, sticky='ewns')
@@ -174,13 +178,16 @@ class MenuWindow():
 
     def read_inputs(self):
         #Read the user inputs in the menu frame.
+
         self.start_date = start_date_input.get()
         self.end_date = end_date_input.get()
         if self.tickers == True:
-            self.ticker_list = ticker_entry.get().split(";")
+            self.ticker_list = ticker_entry.get().upper().split(";")
         else:
             self.name_list = name_entry.get().lower().split(";")
             self.ticker_list = [ticker for ticker in search_for_tickers(self.name_list)]
+            print(self.ticker_list)
+            print(self.name_list)
 
     def ask_for_date_selection(self, data, date_column_name, start_date_valid = False, end_date_valid = False):
         if start_date_valid == False and end_date_valid != False:
@@ -258,6 +265,15 @@ class MenuWindow():
 
     def retrieve_data(self):
         #Read the user input fields.
+        # loading_window = LoadingScreen(self.root)
+        # show_loading = threading.Thread(target = loading_window.update_loading_symbol())
+        # print("Got to here")
+        # show_loading.start()
+        # print("Started thread")
+        #
+        # #loading_window.update()
+        # loading_window.update_loading_symbol()
+        # loading_window.update()
         self.read_inputs()
 
         if self.service_name == "yahoo":
@@ -266,21 +282,94 @@ class MenuWindow():
             self.start_date, self.end_date = check_dates(data, "yahoo", self.start_date, self.end_date, True)
             if self.start_date == False or self.end_date == False:
                 self.ask_for_date_selection(data, "yahoo", self.start_date, self.end_date)
+
         else:
             data, date_column_name = connect_to_api(self.service_name, self.ticker_list[0], "NO7SX7BKV0TRLHAM", self.start_date, self.end_date, True)[0:2]
             self.start_date, self.end_date = check_dates(data, date_column_name, self.start_date, self.end_date, True)
             if self.start_date == False or self.end_date == False:
                 self.ask_for_date_selection(data, date_column_name, self.start_date, self.end_date)
 
+        #
+        # loading_window.finished = True
+        # loading_window.check_if_finished()
+        #loading_window.destroy()
+        print("Making frames...")
         if len(self.ticker_list) == 1:
-            stats_frame, data, date_column_name, new_start, new_end = make_single_frame(self.service_name, self.ticker_list[0], self.start_date, self.end_date, gui = True)
+            stats_frame, data, date_column_name, reverse_data, new_start, new_end = make_single_frame(self.service_name, self.ticker_list[0], self.start_date, self.end_date, gui = True)
             plot_single_time_series(data, self.ticker_list[0], date_column_name)
         else:
+            # for data in data_sets:
+            #     start_date, end_date = check_dates(data, date_column_name, self.start_date, self.end_date)
+            #     if start_date != self.start_date or end_date != self.start_date:
+            #         self.ask_for_date_selection(data, date_column_name, start_date, end_date)
             stats_frame, data_sets, tickers = make_full_frame(self.service_name, self.ticker_list, self.start_date, self.end_date, gui = True)
             plot_multiple_time_series(data_sets, tickers, date_column_name)
+        print("Done making frames.")
+
         self.show_descriptive_stats_frame(stats_frame)
 
 
-    def clickExitButton(self):
-        print("Exiting")
-        quit()
+
+
+
+class LoadingScreen(tk.Toplevel):
+
+    finished = False
+
+    def __init__(self, menu):
+        tk.Toplevel.__init__(self, menu)
+
+        self.title("Loading...")
+        self.config(bg='ivory')
+
+        self.loading_label_text = tk.StringVar()
+
+        self.loading_label = tk.Label(self, textvariable = self.loading_label_text)
+        self.loading_label.pack()
+
+        #self.update_loading_symbol()
+
+        self.geometry("200x200")
+        #self.update()
+
+        #time.sleep(10)
+        #self.update_loading_symbol("Now the label has changed.")
+        #self.update()
+
+    def update_loading_symbol(self):
+        display = "."
+        self.loading_label_text.set(display)
+
+        start_time = time.time()
+
+        while True:
+            elapsed = time.time() - start_time
+            if elapsed % 5 == 0:
+                if len(display) < 4:
+                    display += "."
+                    self.loading_label_text.set(display)
+                    self.update()
+                else:
+                    display = "."
+                    self.loading_label_text.set(display)
+                    self.update()
+                continue
+            # else:
+            #     display = "."
+            #     self.loading_label_text.set(display)
+            #     self.update()
+            #     continue
+            self.loading_label_text.set(display)
+            self.update()
+
+        #print(start_time)
+
+        # print("Loading...")
+        # time.sleep(5)
+        # self.loading_label_text.set(text)
+        #
+        # self.loading_label_text.set("Now the label has changed.")
+
+    def check_if_finished(self):
+        if self.finished == True:
+            self.destroy()
