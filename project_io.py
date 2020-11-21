@@ -9,9 +9,10 @@ from io import StringIO
 import yfinance as yf
 
 from project_calendar import get_valid_dates, find_nearest_date
-from project_nasdaq import connect_to_nasdaq
+from project_nasdaq2 import connect_to_nasdaq
 
 import warnings
+
 
 #FuzzyWuzzy library raises a warning about using a slower version of a
 #Levenshtein distance function. Importing the library this way catches
@@ -33,18 +34,25 @@ def get_api_data(api_url, data_start):
 
 #Function to return nearest dates for which data is available.
 def check_dates(data, date_column_name, start_date, end_date, gui = False):
-    if date_column_name != "yahoo":
-        dates = data[date_column_name]
-    else:
+    if date_column_name == "yahoo":
         dates = [datetime.datetime.strftime(date, '%Y-%m-%d') for date in data.index]
+    elif date_column_name == "nasdaq":
+        dates = data["date"]
+    else:
+        dates = data[date_column_name]
 
     if start_date not in dates or end_date not in dates:
         start_date, end_date = find_nearest_date(dates, start_date, end_date, gui)[0:2]
     return start_date, end_date
 
 #Function to retrieve data for a specified range of dates.
-def get_data_for_period(data, date_column_name, start_date, end_date):
-    dates = data[date_column_name]
+def get_data_for_period(data, date_column_name, reverse_data, start_date, end_date):
+
+    if date_column_name == "yahoo":
+        dates = data.index
+    else:
+        dates = data[date_column_name]
+
     no_dates = len(dates)
     start_index = 0
     end_index = 0
@@ -57,7 +65,7 @@ def get_data_for_period(data, date_column_name, start_date, end_date):
             continue
 
     #If the API presents data in reverse chronological order, the indices are reversed.
-    if start_index > end_index:
+    if reverse_data == True:
         start_index, end_index = end_index, start_index
 
     return pd.DataFrame(data[start_index:end_index])
@@ -65,12 +73,17 @@ def get_data_for_period(data, date_column_name, start_date, end_date):
 def search_for_tickers(company_names):
     name_ticker_file = read_file("project_companies.csv")
     tickers, names = name_ticker_file["Symbol"].str.upper(), name_ticker_file["Name"].str.lower()
-    return [tickers[i] for i in range(len(tickers)) for company_name in company_names if fuzz.ratio(names[i], company_name) >= 80]
+    return [tickers[i] for i in range(len(tickers)) for company_name in company_names if fuzz.ratio(names[i], company_name) >= 90]
 
 def search_for_names(tickers_in):
     name_ticker_file = read_file("project_companies.csv")
     tickers, names = name_ticker_file["Symbol"].str.upper(), name_ticker_file["Name"].str.lower()
-    company_names = []
+    # company_names = []
+    # for i in range(len(tickers_in)):
+    #     for j in range(len(tickers)):
+    #         if tickers_in[i] == tickers[j]:
+    #             company_names.append(names[j])
+    # return company_names
     return [names[i] for i in range(len(tickers)) if tickers[i] in tickers_in]
 
 def search_for_sector(tickers_in):
@@ -80,14 +93,9 @@ def search_for_sector(tickers_in):
 
 
     #return [tickers[i] for i in range(len(tickers)) if names[i] in company_names]
-
 #name_ticker_file[(name_ticker_file.Symbol == {symbol}) | name_ticker_file.Name == {name}]
-#fuzzywuzzy library
 #df[df['Symbol'].str.contains('Zyn')]
-#Implement GUI
 
-def search_archive(archive_file, tickers, ):
-    archive = read_file(archive_file)
 
 def loading(finish):
     for c in itertools.cycle(['|', '/', '-', '\\']):
@@ -118,14 +126,14 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
     while True:
         try:
             #Searches for API name in dictionary
-            print("Service: ",service_name)
+            time.sleep(0.25)
+
             if service_name in api_dict:
                 data = get_api_data(api_dict[service_name][0], api_dict[service_name][2])
                 if "{" not in data.keys():
-
                     if gui == False:
                         start_date, end_date = check_dates(data, api_dict[service_name][1], start_date, end_date)
-                        return get_data_for_period(data, api_dict[service_name][1], start_date, end_date), api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
+                        return get_data_for_period(data, api_dict[service_name][1], api_dict[service_name][3], start_date, end_date), api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
                     else:
                         return data, api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
                     break
@@ -138,8 +146,12 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
                 end_date_dt += datetime.timedelta(days=1)
                 end_date = datetime.datetime.strftime(end_date_dt, '%Y-%m-%d')
 
-                yf_dataframe = yf.Ticker(ticker).history(start = start_date, end = end_date)
+                if start_date == "":
+                    yf_dataframe = yf.Ticker(ticker).history(period="max")
+                else:
+                    yf_dataframe = yf.Ticker(ticker).history(start = start_date, end = end_date)
                 yf_dataframe.columns = yf_dataframe.columns.str.lower()
+                print(yf_dataframe)
 
                 return yf_dataframe
                 break
@@ -149,7 +161,9 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
                 sector = search_for_sector(ticker)
                 print(sector)
                 words = name[0].split()
+                print(words)
 
+                #Formatting company name so it can be used to query the NASDAQ historical stock data.
                 if len(words) > 1:
                     name = ""
                     for i in range(len(words)):
@@ -157,9 +171,17 @@ def connect_to_api(service_name, ticker, api_key, start_date, end_date, gui = Fa
                             name += words[i].capitalize() + "%25252520"
                         else:
                             name += words[i].capitalize()
-                print(connect_to_nasdaq(ticker, name, sector[0]))
-                #return connect_to_nasdaq(ticker, name, sector)
+
+                nasdaq_dataframe = connect_to_nasdaq(ticker, name[0], sector[0])
+                # print(nasdaq_dataframe)
+
+                if gui == False:
+                    start_date, end_date = check_dates(data, api_dict[service_name][1], start_date, end_date)
+                    return get_data_for_period(data, api_dict[service_name][1], start_date, end_date), api_dict[service_name][1], api_dict[service_name][3], start_date, end_date
+                else:
+                    return nasdaq_dataframe, "date", True, start_date, end_date
                 break
+
 
                 #return connect_to_nasdaq(ticker,)
             #If the API name is not in the dictionary, a NameError is raised.

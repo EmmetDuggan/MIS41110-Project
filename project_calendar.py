@@ -50,8 +50,12 @@ def get_valid_dates():
 #Function is get the closest dates to the ones entered via index.
 def get_date_options(dts, dt_differences):
     minimum_index = dt_differences.index(min(dt_differences))
-    return [datetime.datetime.strftime(dts[minimum_index], '%Y-%m-%d'),
-    datetime.datetime.strftime(dts[minimum_index+1], '%Y-%m-%d')]
+    try:
+        return [datetime.datetime.strftime(dts[minimum_index], '%Y-%m-%d'),
+        datetime.datetime.strftime(dts[minimum_index+1], '%Y-%m-%d')]
+    except IndexError:
+        return [datetime.datetime.strftime(dts[minimum_index], '%Y-%m-%d'),
+        datetime.datetime.strftime(dts[minimum_index-1], '%Y-%m-%d')]
 
 #Function to ask the user for which of the available dates they would like
 #to analyse.
