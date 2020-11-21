@@ -30,7 +30,6 @@ class MenuWindow():
         self.add_period_panel()
         self.add_retrieve_button()
 
-
         self.root.config(bg='grey12')
         self.root.geometry("600x600")
         self.root.mainloop()
@@ -91,6 +90,9 @@ class MenuWindow():
         end_date_entry = tk.StringVar()
         end_date_input = ttk.Entry(period_panel, textvariable = end_date_entry)
         end_date_entry.trace("w", lambda *args: self.limit_input(end_date_entry))
+
+        period_panel = ttk.LabelFrame(self.root, text="Time Period", style = "TLabelframe", labelanchor='n')
+        date_format_info = ttk.Label(period_panel, text = "Enter dates in the form yyyy-mm-dd.\nNote that the end date is not inclusive.", style="TLabel")
 
         date_format_info.grid(row = 0, column = 0, sticky='ewns', columnspan = 2)
         start_date_question.grid(row = 1, column = 0, sticky='ewns')
@@ -204,7 +206,7 @@ class MenuWindow():
             labels[i].grid(row=i, column=0, padx=10, sticky='ewns')
             info[i].grid(row=i, column=1, sticky='ewns')
         close_button.grid(row=4, sticky='n')
-
+        
     def show_date_options_frame(self, unavailable_date, options, start = False, end = False, multiple_dates = False):
         #Create a pop-up frame with possible date options if one of the entered dates is not available.
         frame = tk.Toplevel(self.root)
@@ -250,7 +252,7 @@ class MenuWindow():
         else:
             self.name_list = name_entry.get().lower().split(";")
             self.ticker_list = [ticker for ticker in search_for_tickers(self.name_list)]
-
+            
     def yahoo_check_dates(self, data, date_column_name, start_date_str, end_date_str, multiple_dates = False):
         #Find nearest dates to those entered., depending on whether or not the data is in the
         #Yahoo! Finance format or not.
@@ -298,6 +300,7 @@ class MenuWindow():
         frame = tk.Toplevel(self.root)
         frame.title("Descriptive Statistics Summary")
         frame.config(bg='white')
+        
         i = 1
         j = 1
         #Getting the statistics for each company.

@@ -2,6 +2,7 @@
 from project_data_visualisation import plot_raw_time_series, plot_linear_regression
 from project_frames import make_single_frame, add_to_frame, make_full_frame
 from project_gui import MenuWindow
+
 import numpy as np
 
 #Function to repeatedly ask for a yes-or-no answer.

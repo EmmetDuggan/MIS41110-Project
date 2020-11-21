@@ -6,6 +6,7 @@ import datetime
 from project_io import search_for_names
 from project_predictive_stats import time_series_seasonal, create_arima_forecast, time_series_training, time_series_forecast, linear_regression
 
+
 #from project_descriptive_stats import ts_moving_average_exponential
 plt.style.use("dark_background")
 plt.rc('font', family = 'serif')
@@ -17,7 +18,6 @@ plt.rcParams['axes.titlepad'] = 4
 plt.rcParams['xtick.labelsize'] = 'small'
 plt.rcParams['ytick.labelsize'] = 'small'
 plt.rcParams['grid.linewidth'] = 0.15
-
 
 class DataSets():
 
@@ -193,9 +193,25 @@ def plot_linear_regression(data_sets, tickers, date_column_name, period = "d", s
 
 
 
-
-
-
+    data_index = 0
+    print(no_rows, no_cols)
+    for i in range(no_rows):
+        for j in range(no_cols):
+            if uneven == True:
+                if data_index < len(data_sets):
+                    if len(company_names) == len(tickers):
+                        make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index], company_names[data_index])
+                    else:
+                        make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
+                    data_index += 1
+                else:
+                    fig.delaxes(axs[i,j])
+            else:
+                if len(company_names) == len(tickers):
+                    make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index], company_names[data_index])
+                else:
+                    make_time_series(axs[i,j], data_sets[data_index], dates, tickers[data_index])
+                data_index += 1
 
     # grid = plt.GridSpec(4, 4, hspace=0.2, wspace=0.2)
     # main_ax = fig.add_subplot(grid[:-1, 1:])
